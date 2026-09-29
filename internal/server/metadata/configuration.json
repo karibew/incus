@@ -1468,6 +1468,15 @@
 						}
 					},
 					{
+						"security.port_security": {
+							"default": "false",
+							"longdesc": "",
+							"managed": "no",
+							"shortdesc": "Restrict the NIC to sending and receiving traffic only from its assigned MAC and IP addresses (IP pinning requires static `ipv4.address`/`ipv6.address`; without them only the MAC is pinned)",
+							"type": "bool"
+						}
+					},
+					{
 						"security.promiscuous": {
 							"default": "false",
 							"longdesc": "",

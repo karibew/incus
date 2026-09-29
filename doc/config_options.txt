@@ -1312,6 +1312,14 @@ With VMs, this option supports mounting file system disk devices and paths withi
 
 ```
 
+```{config:option} security.port_security devices-nic_ovn
+:default: "false"
+:managed: "no"
+:shortdesc: "Restrict the NIC to sending and receiving traffic only from its assigned MAC and IP addresses (IP pinning requires static `ipv4.address`/`ipv6.address`; without them only the MAC is pinned)"
+:type: "bool"
+
+```
+
 ```{config:option} security.promiscuous devices-nic_ovn
 :default: "false"
 :managed: "no"
