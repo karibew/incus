@@ -136,6 +136,7 @@ type OVNSwitchPortOpts struct {
 	Location     string             // Optional, use to indicate the name of the server this port is bound to.
 	RouterPort   OVNRouterPort      // Optional, the name of the associated logical router port.
 	Promiscuous  bool               // Optional, controls whether to allow unknown traffic on the port.
+	PortSecurity bool               // Optional, restricts the port to its assigned MAC and IP addresses.
 	Enabled      *bool              // Optional, if set controls the administrative state of the port.
 }
 
@@ -1964,6 +1965,25 @@ func (o *NB) GetLogicalSwitchPortUUID(ctx context.Context, portName OVNSwitchPor
 	return OVNSwitchPortUUID(lsp.UUID), nil
 }
 
+// ovnPortSecurityAddresses returns a port_security entry pinning mac and any of ipv4/ipv6 that are concrete addresses.
+func ovnPortSecurityAddresses(mac net.HardwareAddr, ipv4 string, ipv6 string) []string {
+	if mac == nil {
+		return nil
+	}
+
+	entry := []string{mac.String()}
+
+	if ipv4 != "" && ipv4 != "none" {
+		entry = append(entry, ipv4)
+	}
+
+	if ipv6 != "" && ipv6 != "none" {
+		entry = append(entry, ipv6)
+	}
+
+	return []string{strings.Join(entry, " ")}
+}
+
 // CreateLogicalSwitchPort adds a named logical switch port to a logical switch, and sets options if provided.
 // If mayExist is true, then an existing resource of the same name is not treated as an error.
 func (o *NB) CreateLogicalSwitchPort(ctx context.Context, switchName OVNSwitch, portName OVNSwitchPort, opts *OVNSwitchPortOpts, mayExist bool) error {
@@ -2037,6 +2057,13 @@ func (o *NB) CreateLogicalSwitchPort(ctx context.Context, switchName OVNSwitch, 
 			if opts.DHCPv6OptsID != "" {
 				dhcp6opts := string(opts.DHCPv6OptsID)
 				logicalSwitchPort.Dhcpv6Options = &dhcp6opts
+			}
+
+			// Port security always pins the MAC, plus any concrete IPs, but never "dynamic" or "unknown".
+			if opts.PortSecurity {
+				logicalSwitchPort.PortSecurity = ovnPortSecurityAddresses(opts.MAC, opts.IPV4, opts.IPV6)
+			} else {
+				logicalSwitchPort.PortSecurity = nil
 			}
 
 			if opts.Promiscuous {
