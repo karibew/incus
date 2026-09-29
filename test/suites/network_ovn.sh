@@ -161,6 +161,30 @@ test_network_ovn_basic() {
     [ "${U2_IPV4_OLD}" = "${U2_IPV4}" ]
     [ "${U3_IPV4_OLD}" = "${U3_IPV4}" ]
 
+    echo "===> Testing NIC security.port_security"
+    U2_MAC="$(incus config get u2 volatile.eth0.hwaddr)"
+
+    # u2 has no static ipv4.address/ipv6.address, so port_security pins the MAC only.
+    incus config device set u2 eth0 security.port_security=true
+    ovn-nbctl --bare --format=csv --columns=port_security find logical_switch_port | grep -xF "${U2_MAC}"
+
+    # The LSP is recreated on start, so the MAC-only entry must still be there after a full restart.
+    incus restart -f u2
+    echo "==> Wait for addresses"
+    sleep 10
+    ovn-nbctl --bare --format=csv --columns=port_security find logical_switch_port | grep -xF "${U2_MAC}"
+
+    # Adding a static address pins the IP as well, without needing security.port_security to be re-set.
+    U2_IPV4="$(incus list u2 -c4 --format=csv | cut -d' ' -f1)"
+    incus config device set u2 eth0 ipv4.address="${U2_IPV4}"
+    ovn-nbctl --bare --format=csv --columns=port_security find logical_switch_port | grep -xF "${U2_MAC} ${U2_IPV4}"
+
+    # Unsetting the key must clear port_security again (rather than leaving a stale entry behind).
+    incus config device unset u2 eth0 security.port_security
+    ! ovn-nbctl --bare --format=csv --columns=port_security find logical_switch_port | grep -F "${U2_MAC}" || false
+
+    incus config device unset u2 eth0 ipv4.address
+
     echo "===> Testing project restrictions"
     incus project create testovn -c features.networks=true -c features.images=false -c restricted=true
     incus profile device add default root disk path=/ pool="${poolName}" --project testovn
