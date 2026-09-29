@@ -3530,3 +3530,10 @@ PEM encoded public key.
 
 The endorsement keys are only known for TPM devices provisioned by Incus, that is
 when `instances.tpm.platform_cert` was set at the time the device was first started.
+
+## `ovn_nic_port_security`
+
+Adds a `security.port_security` configuration key to `nic` devices attached to
+`ovn` networks. When set to `true`, the logical switch port only sends and
+receives traffic from its assigned MAC and IP addresses. IP pinning requires
+a static `ipv4.address`/`ipv6.address`; without one, only the MAC is pinned.
