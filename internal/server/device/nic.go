@@ -67,6 +67,7 @@ func nicValidationRules(requiredFields []string, optionalFields []string, instCo
 		"security.acls.default.ingress.logged": validate.Optional(validate.IsBool),
 		"security.acls.default.egress.logged":  validate.Optional(validate.IsBool),
 		"security.promiscuous":                 validate.Optional(validate.IsBool),
+		"security.port_security":               validate.Optional(validate.IsBool),
 		"mode":                                 validate.Optional(validate.IsOneOf("bridge", "vepa", "passthru", "private")),
 		"io.bus":                               validate.Optional(func(value string) error { return nicCheckIOBus(instConf, value) }),
 		"vendorid":                             validate.Optional(validate.IsDeviceID),

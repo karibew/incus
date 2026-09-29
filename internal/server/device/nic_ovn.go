@@ -277,6 +277,15 @@ func (d *nicOVN) validateConfig(instConf instance.ConfigReader, partialValidatio
 		//  shortdesc: Have OVN send unknown network traffic to this network interface (required for some nesting cases)
 		"security.promiscuous",
 
+		// gendoc:generate(entity=devices, group=nic_ovn, key=security.port_security)
+		//
+		// ---
+		//  type: bool
+		//  default: false
+		//  managed: no
+		//  shortdesc: Restrict the NIC to sending and receiving traffic only from its assigned MAC and IP addresses (IP pinning requires static `ipv4.address`/`ipv6.address`; without them only the MAC is pinned)
+		"security.port_security",
+
 		// gendoc:generate(entity=devices, group=nic_ovn, key=acceleration)
 		//
 		// ---

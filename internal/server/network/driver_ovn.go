@@ -5651,6 +5651,7 @@ func (n *ovn) instanceDevicePortOpts(instanceUUID string, deviceName string, dev
 		VLAN:         nestedPortVLAN,
 		Location:     location,
 		Promiscuous:  util.IsTrue(devConfig["security.promiscuous"]),
+		PortSecurity: util.IsTrue(devConfig["security.port_security"]),
 		Enabled:      &enabled,
 	}, nil
 }
