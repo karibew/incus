@@ -180,3 +180,39 @@ func Example_complementRanges() {
 	// Range2: 10.1.1.1-10.1.1.9, 10.1.1.101-10.1.1.199, 10.1.1.231-10.1.1.254
 	// Range3: 10.1.1.1-10.1.1.9, 10.1.1.26-10.1.1.254
 }
+
+func Example_ovnDynamicIPsAllocatable() {
+	_, ipv4Net, _ := net.ParseCIDR("10.1.1.0/24")
+	_, ipv6Net, _ := net.ParseCIDR("fd42:1:1:1::/64")
+
+	tests := []struct {
+		name    string
+		ipv4    string
+		ipv6    string
+		ipv4Net *net.IPNet
+		ipv6Net *net.IPNet
+	}{
+		{"Static IPv4 on IPv4 only network", "10.1.1.4", "", ipv4Net, nil},
+		{"Static IPv4 on dual-stack network", "10.1.1.4", "", ipv4Net, ipv6Net},
+		{"Static IPv6 on dual-stack network", "", "fd42:1:1:1::4", ipv4Net, ipv6Net},
+		{"Allocation disabled", "none", "none", ipv4Net, ipv6Net},
+		{"Dynamic on IPv4 only network", "", "", ipv4Net, nil},
+		{"Dynamic on IPv6 only network", "", "", nil, ipv6Net},
+		{"Dynamic on dual-stack network", "", "", ipv4Net, ipv6Net},
+		{"Dynamic on network without subnets", "", "", nil, nil},
+	}
+
+	for _, t := range tests {
+		fmt.Printf("%s: %v\n", t.name, ovnDynamicIPsAllocatable(t.ipv4, t.ipv6, t.ipv4Net, t.ipv6Net))
+	}
+
+	// Output:
+	// Static IPv4 on IPv4 only network: false
+	// Static IPv4 on dual-stack network: false
+	// Static IPv6 on dual-stack network: false
+	// Allocation disabled: false
+	// Dynamic on IPv4 only network: true
+	// Dynamic on IPv6 only network: true
+	// Dynamic on dual-stack network: true
+	// Dynamic on network without subnets: false
+}

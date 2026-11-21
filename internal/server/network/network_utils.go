@@ -1690,6 +1690,16 @@ func ovnRouteExists(currentRoutes []networkOVN.OVNRouterRoute, route networkOVN.
 	})
 }
 
+// ovnDynamicIPsAllocatable returns whether OVN can allocate dynamic IPs to a switch port with the given addresses.
+func ovnDynamicIPsAllocatable(ipv4 string, ipv6 string, ipv4Net *net.IPNet, ipv6Net *net.IPNet) bool {
+	// OVN only allocates dynamic IPs to ports without any static address.
+	if ipv4 != "" || ipv6 != "" {
+		return false
+	}
+
+	return ipv4Net != nil || ipv6Net != nil
+}
+
 // DNSNotifyZones triggers a DNS NOTIFY for all zones configured on the network.
 func DNSNotifyZones(s *state.State, netConfig map[string]string) {
 	if s == nil || s.DNS == nil {

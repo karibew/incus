@@ -6126,20 +6126,32 @@ func (n *ovn) InstanceDevicePortStart(opts *OVNInstanceNICSetupOpts, securityACL
 
 	// Get dynamic IPs for switch port if any IPs not assigned statically.
 	if (ipv4 != "none" && dnsIPv4 == nil) || (ipv6 != "none" && dnsIPv6 == nil) {
+		_, routerIntPortIPv4Net, err := n.parseRouterIntPortIPv4Net()
+		if err != nil {
+			return "", nil, fmt.Errorf("Failed parsing router's internal port IPv4 Net: %w", err)
+		}
+
+		_, routerIntPortIPv6Net, err := n.parseRouterIntPortIPv6Net()
+		if err != nil {
+			return "", nil, fmt.Errorf("Failed parsing router's internal port IPv6 Net: %w", err)
+		}
+
 		var dynamicIPs []net.IP
 
 		// Retry a few times in case port has not yet allocated dynamic IPs.
-		for range 40 {
-			dynamicIPs, err = n.ovnnb.GetLogicalSwitchPortDynamicIPs(context.TODO(), instancePortName)
-			if err == nil {
-				if len(dynamicIPs) > 0 {
-					break
+		if ovnDynamicIPsAllocatable(ipv4, ipv6, routerIntPortIPv4Net, routerIntPortIPv6Net) {
+			for range 40 {
+				dynamicIPs, err = n.ovnnb.GetLogicalSwitchPortDynamicIPs(context.TODO(), instancePortName)
+				if err == nil {
+					if len(dynamicIPs) > 0 {
+						break
+					}
+				} else if !errors.Is(err, ovsClient.ErrNotFound) {
+					return "", nil, err
 				}
-			} else if !errors.Is(err, ovsClient.ErrNotFound) {
-				return "", nil, err
-			}
 
-			time.Sleep(250 * time.Millisecond)
+				time.Sleep(250 * time.Millisecond)
+			}
 		}
 
 		for _, dynamicIP := range dynamicIPs {
